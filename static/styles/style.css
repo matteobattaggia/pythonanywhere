@@ -1,33 +1,3 @@
-/* start of desktop styles */
-
-@media screen and (max-width: 991px) {
-/* start of large tablet styles */
-	html {
-		font-size: 48px;
-	}
-}
-
-@media screen and (max-width: 767px) {
-/* start of medium tablet styles */
-	html {
-		font-size: 48px;
-	}
-}
-
-@media screen and (max-width: 479px) {
-/* start of phone styles */
-	html {
-		font-size: 48px;
-	}
-}
-
-@media (min-width: 640px) {
-/* start of large tablet styles */
-	html {
-		font-size: 48px;
-	}
-}
-
 body {
 	background-color: #222;
 	color: #ddd;
