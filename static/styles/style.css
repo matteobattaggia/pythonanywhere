@@ -3,15 +3,15 @@ body {
 	color: #ddd;
 }
 
-h1 {
-	font-family: sans-serif;
-	/*color: yellow;*/
-}
-
-.center-hv { /* center horizontally and vertically */
+.center-hv {
+	/* center horizontally and vertically */
 	margin: 0;
 	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
+
+	/* big font */
+	font-family: sans-serif;
+	font-size: 500%;
 }
