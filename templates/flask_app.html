@@ -12,8 +12,8 @@
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
 	<!-- <script src="script.js"></script> -->
 </head>
-<body>
-	<div class="w3-container w3-red">
+<body style="background-color: #222; color: #ddd">
+	<div class="w3-display-middle">
 		{% if greeting %}
 			{% if name %}
 				<h1>{{ greeting }}, {{ name }}!</h1>
