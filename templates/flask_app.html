@@ -16,14 +16,13 @@
 	<div class="w3-container w3-red">
 		{% if greeting %}
 			{% if name %}
-				<h1 class="center-hv">{{ greeting }}, {{ name }}!</h1>
+				<h1>{{ greeting }}, {{ name }}!</h1>
 			{% else %}
-				<h1 class="center-hv">{{ greeting }}!</h1>
+				<h1>{{ greeting }}!</h1>
 			{% endif %}
 		{% else %}
-			<h1 class="center-hv">Hello, World!</h1>
+			<h1>Hello, World!</h1>
 		{% endif %}
-		<p>Use http://matteobattaggia.pythonanywhere.com/greeting/name to greet your friends.</p>
 	</div>
 </body>
 </html>
