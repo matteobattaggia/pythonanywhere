@@ -2,24 +2,28 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	{% if greeting %}
 		<title>{{ greeting }}</title>
 	{% else %}
 		<title>Hello</title>
 	{% endif %}
 	<!-- <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"> -->
-	<!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}"> -->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
 	<!-- <script src="script.js"></script> -->
 </head>
 <body>
-	{% if greeting %}
-		{% if name %}
-			<h1 class="center-hv">{{ greeting }}, {{ name }}!</h1>
+	<div class="w3-container w3-red">
+		{% if greeting %}
+			{% if name %}
+				<h1 class="center-hv">{{ greeting }}, {{ name }}!</h1>
+			{% else %}
+				<h1 class="center-hv">{{ greeting }}!</h1>
+			{% endif %}
 		{% else %}
-			<h1 class="center-hv">{{ greeting }}!</h1>
+			<h1 class="center-hv">Hello, World!</h1>
 		{% endif %}
-	{% else %}
-		<h1 class="center-hv">Hello, World!</h1>
-	{% endif %}
+		<p>Use http://matteobattaggia.pythonanywhere.com/greeting/name to greet your friends.</p>
+	</div>
 </body>
 </html>
