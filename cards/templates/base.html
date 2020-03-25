@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{% endblock %} - Cards (WIP!)</title>
+<!-- <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"> -->
+<!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='w3.css') }}"> -->
+<!-- <script src="script.js"></script> -->
+</head>
+
+<body>
+
+<!-- Navigation bar outside home page -->
+{% if request.path != '/' %}
+<nav>
+<a href="{{ url_for('index') }}">Home</a>
+</nav>
+{% endif %}
+
+<section class="content">
+<header>
+{% block header %}{% endblock %}
+</header>
+{% block content %}{% endblock %}
+</section>
+
+</body>
+
+</html>

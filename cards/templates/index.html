@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Home{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+{% if g.user %}
+<p>
+Ciao, {{ g.user['username'] }}. Hai dato la disponibilità a giocare: ricorda che
+puoi sempre <a href="{{ url_for('auth.logout') }}">ritirarla</a>.
+</p>
+{% else %}
+<p>
+Ciao, non ti conosco. Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
+(Se non l'hai già fatto, devi prima
+<a href="{{ url_for('auth.register') }}">registrarti</a>.)
+</p>
+{% endif %}
+{% endblock %}

@@ -31,12 +31,14 @@ def create_app(test_config=None):
 		return render_template('index.html')
 
 	# Register the database commands
-	from . import db
-	db.init_app(app)
+#	from . import db
+	import cards.db
+	cards.db.init_app(app)
 
 	# Apply the blueprints to the app
-	from . import auth
-	app.register_blueprint(auth.bp)
+#	from . import auth
+	import cards.auth
+	app.register_blueprint(cards.auth.bp)
 
 #	# make url_for('index') == url_for('blog.index')
 #	# in another app, you might define a separate main index here with
