@@ -31,12 +31,10 @@ def create_app(test_config=None):
 		return render_template('index.html')
 
 	# Register the database commands
-#	from . import db
 	import cards.db
 	cards.db.init_app(app)
 
 	# Apply the blueprints to the app
-#	from . import auth
 	import cards.auth
 	app.register_blueprint(cards.auth.bp)
 
