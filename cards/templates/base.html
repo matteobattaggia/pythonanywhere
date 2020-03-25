@@ -24,7 +24,7 @@
 {% block header %}{% endblock %}
 </header>
 {% for message in get_flashed_messages() %}
-<p>ERROR: {{ message }}</p>
+<p>{{ message }}</p>
 {% endfor %}
 {% block content %}{% endblock %}
 </section>
