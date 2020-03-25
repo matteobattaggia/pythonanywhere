@@ -40,7 +40,7 @@ def create_app(test_config=None):
 #	db.init_app(app)
 #
 #	# Apply the blueprints to the app
-#	from flaskr import auth, blog
+#	from cards import auth, blog
 #	app.register_blueprint(auth.bp)
 #	app.register_blueprint(blog.bp)
 #
