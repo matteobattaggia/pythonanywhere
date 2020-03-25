@@ -3,7 +3,7 @@ import os
 from flask import Flask, render_template
 
 def create_app(test_config=None):
-	'Create and configure an instance of the Flask application.'
+	'''Create and configure an instance of the Flask application.'''
 
 	# Create and configure the app
 	app = Flask(__name__, instance_relative_config=True)
@@ -27,23 +27,17 @@ def create_app(test_config=None):
 		pass
 
 	@app.route('/')
-	@app.route('/<greeting>/')
-	@app.route('/<greeting>/<name>')
-	def hello(greeting=None, name=None):
-		def capitalize(s):
-			return s[0].upper() + s[1:].lower() if s else ''
-		greeting, name = (capitalize(s) for s in [greeting, name])
-		return render_template('hello.html', greeting=greeting, name=name)
+	def index():
+		return render_template('index.html')
 
-#	# Register the database commands
-#	from cards import db
-#	db.init_app(app)
-#
-#	# Apply the blueprints to the app
-#	from cards import auth, blog
-#	app.register_blueprint(auth.bp)
-#	app.register_blueprint(blog.bp)
-#
+	# Register the database commands
+	from . import db
+	db.init_app(app)
+
+	# Apply the blueprints to the app
+	from . import auth
+	app.register_blueprint(auth.bp)
+
 #	# make url_for('index') == url_for('blog.index')
 #	# in another app, you might define a separate main index here with
 #	# app.route, while giving the blog blueprint a url_prefix, but for

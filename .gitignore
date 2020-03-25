@@ -1,4 +1,5 @@
 __pycache__
 *.bat
 *.txt
+instance/*
 
