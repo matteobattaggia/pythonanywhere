@@ -5,7 +5,7 @@ from flask import Blueprint, flash, g, redirect, render_template, request, \
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
-from cards.db import get_db
+from cards.db import get_db, deserialize_user_state
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -69,8 +69,7 @@ def register():
 				'action_after_change'  :  0,
 			}
 			db.execute('INSERT INTO user (username, password, state) VALUES (?, ?, ?)',
-			           (username, generate_password_hash(password),
-			            pickle.dumps(initial_state)))
+			           (username, generate_password_hash(password), pickle.dumps(initial_state)))
 			db.commit()
 			flash('User "{}" successfully registered.'.format(username))
 			return redirect(url_for('auth.login'))
@@ -85,9 +84,9 @@ def login():
 
 	if request.method == 'POST':
 
+		error = None
 		username = request.form['username']
 		password = request.form['password']
-		error = None
 		db = get_db()
 		user = db.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
 
@@ -101,8 +100,7 @@ def login():
 			# Update the user state to "available to play"
 			state = pickle.loads(user['state'])
 			state['available_to_play'] = True
-			db.execute('UPDATE user SET state = ? WHERE id = ?',
-			           (pickle.dumps(state), user['id']))
+			db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(state), user['id']))
 			db.commit()
 
 			# Store the user id in a new session and return to the index
@@ -123,8 +121,7 @@ def logout():
 		state = pickle.loads(g.user['state'])
 		state['available_to_play'] = False
 		db = get_db()
-		db.execute('UPDATE user SET state = ? WHERE id = ?',
-		           (pickle.dumps(state), g.user['id']))
+		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(state), g.user['id']))
 		db.commit()
 
 	session.clear()

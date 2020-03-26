@@ -22,16 +22,22 @@
 	</p>
 	<p>
 	{% if players|length == 4 %}
-		Ci sono quattro giocatori disponibili: puoi <a href="#">iniziare la partita</a>.
+		Partita iniziata con ordine di gioco:
+		{% for player in ordered_players[:-1] %}{{ player['username'] }}, {% endfor %}{{ ordered_players[-1]['username'] }}.
 	{% else %}
 		Ci vogliono quattro giocatori per iniziare la partita.
 	{% endif %}
 	</p>
 {% else %}
 	<p>
-	Ciao, non ti conosco. Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
-	(Se non l'hai già fatto, devi prima
-	<a href="{{ url_for('auth.register') }}">registrarti</a>.)
+	{% if players|length >= 4 %}
+		Ciao, purtroppo in questo momento il tavolo è al completo,
+		e devi aspettare che si liberi un posto per giocare.
+		(Se non l'hai già fatto, puoi iniziare a <a href="{{ url_for('auth.register') }}">registrarti</a>.)
+	{% else %}
+		Ciao, non ti conosco. Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
+		(Se non l'hai già fatto, devi prima <a href="{{ url_for('auth.register') }}">registrarti</a>.)
+	{% endif %}
 </p>
 {% endif %}
 {% endblock %}

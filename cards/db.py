@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, pickle
 
 import click
 from flask import g, current_app
@@ -15,6 +15,12 @@ def get_db():
 		g.db.row_factory = sqlite3.Row
 
 	return g.db
+
+def deserialize_user_state(user):
+	user_dict = dict(user)
+	if user['state'] is not None:
+		user_dict['state'] = pickle.loads(user['state'])
+	return user_dict
 
 def close_db(e=None):
 	'''If this request connected to the database, close the connection.'''
