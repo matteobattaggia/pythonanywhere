@@ -6,23 +6,32 @@
 
 {% block content %}
 {% if g.user %}
-<p>
-Ciao, {{ g.user['username'] }}. Hai dato la disponibilità a giocare: ricorda che
-puoi sempre <a href="{{ url_for('auth.logout') }}">ritirarla</a>.
-</p>
-<p>
-{% if players|length == 1 %}
-In questo momento non ci sono altri utenti disponibili a giocare (su {{ num_users }} utenti totali).
+	<p>
+	Ciao, {{ g.user['username'] }}. Hai dato la disponibilità a giocare: ricorda che
+	puoi sempre <a href="{{ url_for('auth.logout') }}">ritirarla</a>.
+	</p>
+	<p>
+	{% if players|length == 0 %}
+		In questo momento non ci sono utenti disponibili a giocare (su {{ num_users }} utenti totali).
+	{% elif players|length == 1 %}
+		In questo momento non ci sono altri utenti disponibili a giocare (su {{ num_users }} utenti totali).
+	{% else %}
+		In questo momento ci sono {{ players|length }} utenti disponibili a giocare (su {{ num_users }} utenti totali):
+		{% for player in players[:-1] %}{{ player['username'] }}, {% endfor %}{{ players[-1]['username'] }}.
+	{% endif %}
+	</p>
+	<p>
+	{% if players|length == 4 %}
+		Ci sono quattro giocatori disponibili: puoi <a href="#">iniziare la partita</a>.
+	{% else %}
+		Ci vogliono quattro giocatori per iniziare la partita.
+	{% endif %}
+	</p>
 {% else %}
-In questo momento ci sono {{ players|length }} utenti disponibili a giocare (su {{ num_users }} utenti totali):
-{% for player in players[:-1] %}{{ player['username'] }}, {% endfor %}{{ players[-1]['username'] }}.
-{% endif %}
-</p>
-{% else %}
-<p>
-Ciao, non ti conosco. Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
-(Se non l'hai già fatto, devi prima
-<a href="{{ url_for('auth.register') }}">registrarti</a>.)
+	<p>
+	Ciao, non ti conosco. Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
+	(Se non l'hai già fatto, devi prima
+	<a href="{{ url_for('auth.register') }}">registrarti</a>.)
 </p>
 {% endif %}
 {% endblock %}
