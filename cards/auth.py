@@ -36,6 +36,7 @@ def register():
 	password for security.
 	'''
 	if request.method == 'POST':
+
 		username = request.form['username']
 		password = request.form['password']
 		db = get_db()
@@ -51,8 +52,25 @@ def register():
 
 		if error is None:
 			# The name is available: store it in the database and go to the login page
-			db.execute('INSERT INTO user (username, password) VALUES (?, ?)',
-			           (username, generate_password_hash(password)))
+			initial_state = \
+			{
+				# These do not change each hand
+				'available_to_play' : False,
+				'playing_order'     :     0,
+				'assets'            :     0,
+				'liabilities'       :     0,
+
+				# These change each hand
+				'ante'                 :  0,
+				'cards_before_change'  : [],
+				'action_before_change' :  0,
+				'cards_to_be_changed'  : [],
+				'new_cards'            : [],
+				'action_after_change'  :  0,
+			}
+			db.execute('INSERT INTO user (username, password, state) VALUES (?, ?, ?)',
+			           (username, generate_password_hash(password),
+			            pickle.dumps(initial_state)))
 			db.commit()
 			flash('User "{}" successfully registered.'.format(username))
 			return redirect(url_for('auth.login'))
@@ -64,13 +82,14 @@ def register():
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
 	'''Log in a registered user by adding the user id to the session.'''
+
 	if request.method == 'POST':
+
 		username = request.form['username']
 		password = request.form['password']
 		error = None
 		db = get_db()
-		user = db.execute(
-			'SELECT * FROM user WHERE username = ?', (username,)).fetchone()
+		user = db.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
 
 		if user is None:
 			error = 'Incorrect username.'
@@ -80,11 +99,8 @@ def login():
 		if error is None:
 
 			# Update the user state to "available to play"
-			if user['state'] is None:
-				state = { 'available_to_play': True }
-			else:
-				state = pickle.loads(user['state'])
-				state['available_to_play'] = True
+			state = pickle.loads(user['state'])
+			state['available_to_play'] = True
 			db.execute('UPDATE user SET state = ? WHERE id = ?',
 			           (pickle.dumps(state), user['id']))
 			db.commit()
@@ -104,12 +120,9 @@ def logout():
 
 	# Update the user state to "unavailable to play"
 	if g.user is not None:
+		state = pickle.loads(g.user['state'])
+		state['available_to_play'] = False
 		db = get_db()
-		if g.user['state'] is None:
-			state = { 'available_to_play': False }
-		else:
-			state = pickle.loads(g.user['state'])
-			state['available_to_play'] = False
 		db.execute('UPDATE user SET state = ? WHERE id = ?',
 		           (pickle.dumps(state), g.user['id']))
 		db.commit()

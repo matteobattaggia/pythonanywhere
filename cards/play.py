@@ -15,8 +15,8 @@ def deserialize_user_state(user):
 @bp.route('/')
 def index():
 	db = get_db()
-	num_users = db.execute('SELECT COUNT(*) FROM user').fetchone()[0]
+#	num_users = db.execute('SELECT COUNT(*) FROM user').fetchone()[0]
 	users = [deserialize_user_state(user) for user in db.execute('SELECT * FROM user').fetchall()]
 	players = [user for user in users
 	           if (user['state'] and user['state']['available_to_play'])]
-	return render_template('play/index.html', num_users=num_users, players=players)
+	return render_template('play/index.html', num_users=len(users), players=players)
