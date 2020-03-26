@@ -1,4 +1,4 @@
-import functools
+import functools, pickle
 
 from flask import Blueprint, flash, g, redirect, render_template, request, \
                   session, url_for
@@ -68,7 +68,8 @@ def login():
 		username = request.form['username']
 		password = request.form['password']
 		error = None
-		user = get_db().execute(
+		db = get_db()
+		user = db.execute(
 			'SELECT * FROM user WHERE username = ?', (username,)).fetchone()
 
 		if user is None:
@@ -77,6 +78,17 @@ def login():
 			error = 'Incorrect password.'
 
 		if error is None:
+
+			# Update the user state to "available to play"
+			if user['state'] is None:
+				state = { 'available_to_play': True }
+			else:
+				state = pickle.loads(user['state'])
+				state['available_to_play'] = True
+			db.execute('UPDATE user SET state = ? WHERE id = ?',
+			           (pickle.dumps(state), user['id']))
+			db.commit()
+
 			# Store the user id in a new session and return to the index
 			session.clear()
 			session['user_id'] = user['id']
@@ -89,5 +101,18 @@ def login():
 @bp.route('/logout')
 def logout():
 	'''Clear the current session, including the stored user id.'''
+
+	# Update the user state to "unavailable to play"
+	if g.user is not None:
+		db = get_db()
+		if g.user['state'] is None:
+			state = { 'available_to_play': False }
+		else:
+			state = pickle.loads(g.user['state'])
+			state['available_to_play'] = False
+		db.execute('UPDATE user SET state = ? WHERE id = ?',
+		           (pickle.dumps(state), g.user['id']))
+		db.commit()
+
 	session.clear()
 	return redirect(url_for('index'))
