@@ -61,12 +61,12 @@ def register():
 				'liabilities'       :     0,
 
 				# These change each hand
-				'ante'                 :  0,
-				'cards_before_change'  : [],
-				'action_before_change' :  0,
-				'cards_to_be_changed'  : [],
-				'new_cards'            : [],
-				'action_after_change'  :  0,
+				'ante'                 :    0,
+				'cards_before_change'  : None,
+				'action_before_change' :    0,
+				'cards_to_be_changed'  : None,
+				'new_cards'            : None,
+				'action_after_change'  :    0,
 			}
 			db.execute('INSERT INTO user (username, password, state) VALUES (?, ?, ?)',
 			           (username, generate_password_hash(password), pickle.dumps(initial_state)))
