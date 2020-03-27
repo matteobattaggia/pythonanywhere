@@ -139,7 +139,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 	{% endif %}
 
 	<!-- Show cards after change -->
-	{% if phase_ante == 4 %}
+	{% if phase_ante == 4 and phase_action_before_change == 4 and phase_change == 4 %}
 		<p>
 		{% for player in ordered_players %}
 			{% if g.user and player['id'] == g.user['id'] %}

@@ -171,12 +171,36 @@ def index():
 		merge_cards=merge_cards,
 	)
 
-@bp.route('/debug/reset')
-def reset():
-	'''Reset state for all users'''
+@bp.route('/debug/reset/<username>')
+def reset(username):
 	db = get_db()
-	users = db.execute('SELECT * FROM user').fetchall()
-	for user in users:
+	if username == '__ALL__':
+		# Reset state for all users
+		users = db.execute('SELECT * FROM user').fetchall()
+		for user in users:
+			db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(INITIAL_USER_STATE), user['id']))
+	else:
+		# Reset state for username
+		user = db.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
 		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(INITIAL_USER_STATE), user['id']))
+	db.commit()
+	return redirect(url_for('index'))
+
+@bp.route('/debug/restart/')
+@bp.route('/debug/restart/<change_playing_order>')
+def restart(change_playing_order=None):
+	db = get_db()
+	# Reset hand state (and possibly playing order) for all users
+	users = [deserialize_user_state(user) for user in db.execute('SELECT * FROM user').fetchall()]
+	for user in users:
+		user['state']['ante'                ] =    0
+		user['state']['cards_before_change' ] = None
+		user['state']['action_before_change'] =    0
+		user['state']['cards_to_be_changed' ] = None
+		user['state']['new_cards'           ] = None
+		user['state']['action_after_change' ] =    0
+		if change_playing_order:
+			user['state']['playing_order'] = 0
+		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(user['state']), user['id']))
 	db.commit()
 	return redirect(url_for('index'))
