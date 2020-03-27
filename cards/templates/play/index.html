@@ -12,11 +12,11 @@
 	</p>
 	<p>
 	{% if players|length == 0 %}
-		In questo momento non ci sono utenti disponibili a giocare (su {{ num_users }} utenti totali).
+		In questo momento non ci sono utenti disponibili a giocare (su {{ users|length }} utenti totali).
 	{% elif players|length == 1 %}
-		In questo momento non ci sono altri utenti disponibili a giocare (su {{ num_users }} utenti totali).
+		In questo momento non ci sono altri utenti disponibili a giocare (su {{ users|length }} utenti totali).
 	{% else %}
-		In questo momento ci sono {{ players|length }} utenti disponibili a giocare (su {{ num_users }} utenti totali):
+		In questo momento ci sono {{ players|length }} utenti disponibili a giocare (su {{ users|length }} utenti totali):
 		{% for player in players[:-1] %}{{ player['username'] }}, {% endfor %}{{ players[-1]['username'] }}.
 	{% endif %}
 	</p>
@@ -24,6 +24,28 @@
 	{% if players|length == 4 %}
 		Partita iniziata con ordine di gioco:
 		{% for player in ordered_players[:-1] %}{{ player['username'] }}, {% endfor %}{{ ordered_players[-1]['username'] }}.
+
+			<p><i>
+				DEBUG:
+				phase = {{ phase }};
+				focused_player = {{ focused_player['username'] }};
+				focused_player.playing_order = {{ focused_player['state']['playing_order'] }};
+			</i></p>
+
+			{% if phase == 'ante' %}
+				{% if g.user['id'] == focused_player['id'] %}
+					{% if focused_player['state']['playing_order'] == 0 %}
+						<p>Devi mettere il cip per primo.</p>
+					{% else %}
+						<p>Devi mettere il cip.</p>
+					{% endif %}
+				{% else %}
+					<p>{{ focused_player['username'] }} deve mettere il cip.</p>
+				{% endif %}
+			{% elif phase == 'action_before_change' %}
+			{% elif phase == 'action_after_change' %}
+			{% else %}
+			{% endif %}
 	{% else %}
 		Ci vogliono quattro giocatori per iniziare la partita.
 	{% endif %}

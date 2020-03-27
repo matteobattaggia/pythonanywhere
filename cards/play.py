@@ -12,7 +12,7 @@ def index():
 #	num_users = db.execute('SELECT COUNT(*) FROM user').fetchone()[0]
 	users = [deserialize_user_state(user) for user in db.execute('SELECT * FROM user').fetchall()]
 	players = [user for user in users if (user['state'] and user['state']['available_to_play'])]
-	ordered_players = None
+	ordered_players, phase, focused_player = None, None, None
 	random.seed()
 	if len(players) == 4:
 
@@ -26,20 +26,23 @@ def index():
 			db.commit()
 		ordered_players = [players[i] for i in playing_orders]
 
-		# Check the antes
-		# TODO
+		# Antes
+		for player in ordered_players:
+			if player['state']['ante'] == 0:
+				phase, focused_player = 'ante', player
+				break
 
 		# Give the cards
 		# TODO
 
 		# Actions before change
-		# TODO
+#		actions_before_change = [player['state']['action_before_change'] for player in ordered_players]
 
 		# Change the cards
 		# TODO
 
 		# Actions after change
-		# TODO
+#		actions_after_change = [player['state']['action_after_change'] for player in ordered_players]
 
 		# Show the cards and give the winner money
 		# TODO
@@ -58,7 +61,9 @@ def index():
 		db.commit()
 	return render_template(
 		'play/index.html',
-		num_users=len(users),
+		users=users,
 		players=players,
 		ordered_players=ordered_players,
+		phase=phase,
+		focused_player=focused_player,
 	)
