@@ -6,10 +6,12 @@
 
 {% block content %}
 {% if g.user %}
+
 	<p>
 	Ciao, {{ g.user['username'] }}. Hai dato la disponibilità a giocare: ricorda che
 	puoi sempre <a href="{{ url_for('auth.logout') }}">ritirarla</a>.
 	</p>
+
 	<p>
 	{% if players|length == 0 %}
 		In questo momento non ci sono utenti disponibili a giocare (su {{ users|length }} utenti totali).
@@ -20,46 +22,69 @@
 		{% for player in players[:-1] %}{{ player['username'] }}, {% endfor %}{{ players[-1]['username'] }}.
 	{% endif %}
 	</p>
+
 	<p>
 	{% if players|length == 4 %}
+
 		Partita iniziata con ordine di gioco:
-		{% for player in ordered_players[:-1] %}{{ player['username'] }}, {% endfor %}{{ ordered_players[-1]['username'] }}.
+		{% for player in ordered_players[:-1] %}{{ player['username'] }}, {% endfor %}
+		{{ ordered_players[-1]['username'] }}.
 
-			<p><i>
-				DEBUG:
-				phase = {{ phase }};
-				focused_player = {{ focused_player['username'] }};
-				focused_player.playing_order = {{ focused_player['state']['playing_order'] }};
-			</i></p>
+			<p>
+			{% for i in range(phase_ante) %}
+				{{ ordered_players[i]['username'] }} ha messo il cip: {{ ordered_players[i]['state']['ante'] }}.
+			{% endfor %}
+			</p>
 
-			{% if phase == 'ante' %}
-				{% if g.user['id'] == focused_player['id'] %}
-					{% if focused_player['state']['playing_order'] == 0 %}
-						<p>Devi mettere il cip per primo.</p>
-					{% else %}
-						<p>Devi mettere il cip.</p>
-					{% endif %}
+			<p>
+			{% if phase_ante < 4 %}
+				{% if ordered_players[phase_ante]['id'] == g.user['id'] %}
+					<form method="post">
+						Metti il cip (valori possibili: 10, 20, ..., 100):
+						<input type="number" name="ante" id="ante" value="10" min="10" max="100" step="10" required>
+						<input type="submit" value="Metti">
+					</form>
 				{% else %}
-					<p>{{ focused_player['username'] }} deve mettere il cip.</p>
+					{{ ordered_players[phase_ante]['username'] }} deve mettere il cip.
 				{% endif %}
-			{% elif phase == 'action_before_change' %}
-			{% elif phase == 'action_after_change' %}
-			{% else %}
 			{% endif %}
+			</p>
+
+			<p>
+			{% if phase_ante == 4 %}
+				{% for player in ordered_players %}
+					{% if player['id'] == g.user['id'] %}
+						Le tue carte iniziali sono:
+						{{ show_cards(player['state']['cards_before_change']) }}.
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+			</p>
+
 	{% else %}
 		Ci vogliono quattro giocatori per iniziare la partita.
 	{% endif %}
 	</p>
+
 {% else %}
-	<p>
+
 	{% if players|length >= 4 %}
-		Ciao, purtroppo in questo momento il tavolo è al completo,
-		e devi aspettare che si liberi un posto per giocare.
-		(Se non l'hai già fatto, puoi iniziare a <a href="{{ url_for('auth.register') }}">registrarti</a>.)
+		<p>
+		Ciao, purtroppo in questo momento il tavolo è al completo
+		(stanno giocando {% for player in players[:-1] %}{{ player['username'] }}, {% endfor %}{{ players[-1]['username'] }}).
+		</p>
+		<p>Devi aspettare che si liberi un posto per giocare.</p>
+		<p>
+		Nell'attesa, se non l'hai già fatto, puoi iniziare a
+		<a href="{{ url_for('auth.register') }}">registrarti</a>
+		(la registrazione è necessaria per giocare).
+		</p>
 	{% else %}
+		<p>
 		Ciao, non ti conosco. Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
 		(Se non l'hai già fatto, devi prima <a href="{{ url_for('auth.register') }}">registrarti</a>.)
+		</p>
 	{% endif %}
-</p>
-{% endif %}
-{% endblock %}
+
+{% endif %}  <!-- if g.user  -->
+{% endblock %}  <!-- block content -->
