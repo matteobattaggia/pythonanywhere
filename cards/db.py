@@ -4,6 +4,29 @@ import click
 from flask import g, current_app
 from flask.cli import with_appcontext
 
+INITIAL_USER_STATE = \
+{
+	# These do not change each hand
+	'available_to_play' : False,
+	'playing_order'     :     0,
+	'assets'            :     0,
+	'liabilities'       :     0,
+
+	# These change each hand
+	'ante'                 :    0,
+	'cards_before_change'  : None,
+	'action_before_change' :    0,
+	'cards_to_be_changed'  : None,
+	'new_cards'            : None,
+	'action_after_change'  :    0,
+}
+
+def deserialize_user_state(user):
+	user_dict = dict(user)
+	if user['state'] is not None:
+		user_dict['state'] = pickle.loads(user['state'])
+	return user_dict
+
 def get_db():
 	'''Connect to the application's configured database. The connection
 	is unique for each request and will be reused if this is called
@@ -15,12 +38,6 @@ def get_db():
 		g.db.row_factory = sqlite3.Row
 
 	return g.db
-
-def deserialize_user_state(user):
-	user_dict = dict(user)
-	if user['state'] is not None:
-		user_dict['state'] = pickle.loads(user['state'])
-	return user_dict
 
 def close_db(e=None):
 	'''If this request connected to the database, close the connection.'''

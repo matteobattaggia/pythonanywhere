@@ -1,8 +1,8 @@
 import functools, pickle, random
 
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, g, session
 
-from cards.db import get_db, deserialize_user_state
+from cards.db import get_db, INITIAL_USER_STATE, deserialize_user_state
 
 # Some constants and functions to manage playing cards
 SUITS = SPADE, CLUB, DIAMOND, HEART = list('\u2660\u2663\u2662\u2661')
@@ -27,8 +27,21 @@ def get_cards(cs, s):
 		return sorted([cs[i - 1] for i in indices])
 	except (ValueError, IndexError):
 		return cs
+def merge_cards(cards_before_change, cards_to_be_changed, new_cards):
+	return sorted(set(cards_before_change) - set(cards_to_be_changed) | set(new_cards))
 
 bp = Blueprint('play', __name__)
+
+@bp.before_app_request
+def load_logged_in_user():
+	'''If a user id is stored in the session, load the user object from
+	the database into "g.user".'''
+	user_id = session.get('user_id')
+	if user_id is None:
+		g.user = None
+	else:
+		g.user = deserialize_user_state(get_db().execute(
+			'SELECT * FROM user WHERE id = ?', (user_id,)).fetchone())
 
 @bp.route('/', methods=('GET', 'POST'))
 def index():
@@ -109,12 +122,21 @@ def index():
 		if phase_change == 4 and ordered_players[0]['state']['new_cards'] is None:
 			deck = set(range(NUMBER_OF_CARDS))
 			all_players_cards = set(sum([player['state']['cards_before_change'] for player in ordered_players], []))
-			all_cards_to_be_changed = set(sum([player['state']['cards_to_be_changed'] for player in ordered_players], []))
-			for i, player in enumerate(ordered_players):
-				# TODO
-				pass
-#				db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(player['state']), player['id']))
-#			db.commit()
+			remaining_cards = list(deck - all_players_cards)
+			discarded_cards = []
+			random.shuffle(remaining_cards)
+			for player in ordered_players:
+				num_cards_to_be_changed = len(player['state']['cards_to_be_changed'])
+				if num_cards_to_be_changed <= len(remaining_cards):
+					player['state']['new_cards'] = sorted(remaining_cards[:num_cards_to_be_changed])
+					remaining_cards = remaining_cards[num_cards_to_be_changed:]
+				else:
+					random.shuffle(discarded_cards)
+					num_discarded_cards_needed = num_cards_to_be_changed - len(remaining_cards)
+					player['state']['new_cards'] = sorted(remaining_cards + discarded_cards[:num_discarded_cards_needed])
+				discarded_cards += player['state']['cards_to_be_changed']
+				db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(player['state']), player['id']))
+			db.commit()
 
 		# Actions after change
 		phase_action_after_change = 4
@@ -122,8 +144,9 @@ def index():
 		# Show the cards and give the winner money
 		# TODO
 
-	else:
-		# Reset playing order for all users and hand state for all users
+	else:  # if len(players) == 4
+
+		# Reset playing order and hand state for all users
 		for user in users:
 			user['state']['playing_order'       ] =    0
 			user['state']['ante'                ] =    0
@@ -134,9 +157,9 @@ def index():
 			user['state']['action_after_change' ] =    0
 			db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(user['state']), user['id']))
 		db.commit()
+
 	return render_template(
 		'play/index.html',
-		show_cards=show_cards,
 		users=users,
 		players=players,
 		ordered_players=ordered_players,
@@ -144,4 +167,16 @@ def index():
 		phase_action_before_change=phase_action_before_change,
 		phase_change=phase_change,
 		phase_action_after_change=phase_action_after_change,
+		show_cards=show_cards,
+		merge_cards=merge_cards,
 	)
+
+@bp.route('/debug/reset')
+def reset():
+	'''Reset state for all users'''
+	db = get_db()
+	users = db.execute('SELECT * FROM user').fetchall()
+	for user in users:
+		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(INITIAL_USER_STATE), user['id']))
+	db.commit()
+	return redirect(url_for('index'))

@@ -5,7 +5,7 @@ from flask import Blueprint, flash, g, redirect, render_template, request, \
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
-from cards.db import get_db, deserialize_user_state
+from cards.db import get_db, INITIAL_USER_STATE, deserialize_user_state
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -26,8 +26,8 @@ def load_logged_in_user():
 	if user_id is None:
 		g.user = None
 	else:
-		g.user = get_db().execute(
-			'SELECT * FROM user WHERE id = ?', (user_id,)).fetchone()
+		g.user = deserialize_user_state(get_db().execute(
+			'SELECT * FROM user WHERE id = ?', (user_id,)).fetchone())
 
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
@@ -52,24 +52,8 @@ def register():
 
 		if error is None:
 			# The name is available: store it in the database and go to the login page
-			initial_state = \
-			{
-				# These do not change each hand
-				'available_to_play' : False,
-				'playing_order'     :     0,
-				'assets'            :     0,
-				'liabilities'       :     0,
-
-				# These change each hand
-				'ante'                 :    0,
-				'cards_before_change'  : None,
-				'action_before_change' :    0,
-				'cards_to_be_changed'  : None,
-				'new_cards'            : None,
-				'action_after_change'  :    0,
-			}
 			db.execute('INSERT INTO user (username, password, state) VALUES (?, ?, ?)',
-			           (username, generate_password_hash(password), pickle.dumps(initial_state)))
+			           (username, generate_password_hash(password), pickle.dumps(INITIAL_USER_STATE)))
 			db.commit()
 			flash('User "{}" successfully registered.'.format(username))
 			return redirect(url_for('auth.login'))

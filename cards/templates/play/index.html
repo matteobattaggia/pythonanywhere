@@ -1,130 +1,163 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Home{% endblock %}</h1>
+<h1>{% block title %}Poker{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-{% if g.user %}
 
-	<p>
-	Ciao, {{ g.user['username'] }}. Hai dato la disponibilità a giocare: ricorda che
-	puoi sempre <a href="{{ url_for('auth.logout') }}">ritirarla</a>
-	(se lo fai, annullerai la partita).
-	</p>
+{% if g.user and g.user['state']['available_to_play'] %}
+	<p>Ciao, <strong>{{ g.user['username'] }}</strong>.</p>
+{% endif %}
 
-	<p>
-	Utenti registrati: {{ users|length }}.
-	{% if players|length == 0 %}
-		In questo momento non c'è nessun utente disponibile a giocare.
-	{% else %}
-		Utenti disponibili a giocare: {{ players|length }}
-		({% for player in players[:-1] %}{{ player['username'] }}, {% endfor %}{{ players[-1]['username'] }}).
-	{% endif %}
-	</p>
-
-	{% if players|length == 4 %}
-
-		<p>
-		Ordine di gioco:
-		{% for player in ordered_players[:-1] %}{{ player['username'] }}, {% endfor %}
-		{{ ordered_players[-1]['username'] }}.
-		</p>
-
-			<p>
-			{% for i in range(phase_ante) %}
-				{{ ordered_players[i]['username'] }} ha messo il cip: {{ ordered_players[i]['state']['ante'] }}.
-			{% endfor %}
-			<i>[TODO: gestire la fase di cip.]</i>
-			</p>
-
-			{% if phase_ante < 4 %}
-
-				<p>
-				{% if ordered_players[phase_ante]['id'] == g.user['id'] %}
-					<form method="post">
-						Metti il cip (valori possibili: 10, 20, ..., 100):
-						<input type="number" name="ante" id="ante" value="10" min="10" max="100" step="10" required>
-						<input type="submit" value="Metti">
-					</form>
-				{% else %}
-					{{ ordered_players[phase_ante]['username'] }} deve mettere il cip.
-				{% endif %}
-				</p>
-
-			{% else %}  <!-- phase_ante == 4 -->
-
-				<p>
-				{% for player in ordered_players %}
-					{% if player['id'] == g.user['id'] %}
-						Le tue carte iniziali sono:
-						{{ show_cards(player['state']['cards_before_change']) }}.
-					{% endif %}
-				{% endfor %}
-				</p>
-
-				<p>
-				{% for i in range(phase_action_before_change) %}
-					{{ ordered_players[i]['username'] }} ha puntato:
-					{{ ordered_players[i]['state']['action_before_change'] }}.
-				{% endfor %}
-				<i>[TODO: gestire la fase di puntate prima del cambio carte.]</i>
-				</p>
-
-			{% endif %}  <!-- if phase_ante < 4 -->
-
-			<!-- TODO: manage actions before change -->
-			{% if phase_ante == 4 and phase_action_before_change < 4 %}
-			{% endif %}
-
-			<!-- Change cards -->
-
-			<p>
-			{% for i in range(phase_change) %}
-				{{ ordered_players[i]['username'] }} ha cambiato:
-				{{ ordered_players[i]['state']['cards_to_be_changed']|length }}.
-			{% endfor %}
-			</p>
-
-			{% if phase_ante == 4 and phase_action_before_change == 4 and phase_change < 4 %}
-
-				<p>
-				{% if ordered_players[phase_change]['id'] == g.user['id'] %}
-					<form method="post">
-						Carte che vuoi cambiare (es. "1, 2, 5"; "0" = servito):
-						<input type="text" name="change" id="change" required>
-						<input type="submit" value="Cambia">
-					</form>
-				{% else %}
-					{{ ordered_players[phase_change]['username'] }} deve decidere quante carte cambiare.
-				{% endif %}
-				</p>
-
-			{% endif %}  <!-- if phase_ante == 4 and phase_action_before_change == 4 and phase_change < 4 -->
-
-	{% else %}
-		Ci vogliono quattro giocatori per iniziare la partita.
-	{% endif %}
-
+<p>
+Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
+{% if players|length > 0 %}
+	{{ players|length }} ({% for player in players[:-1] %}<strong>{{ player['username'] }}</strong>, {% endfor %}
+	<strong>{{ players[-1]['username'] }}</strong>).
 {% else %}
+	0.
+{% endif %}
+</p>
 
-	{% if players|length >= 4 %}
+<p>
+{% if players|length > 4 %}
+	Si gioca in quattro: ci sono troppi giocatori.
+	{% if g.user and g.user['state']['available_to_play'] %}
+		Vuoi <a href="{{ url_for('auth.logout') }}">lasciare il posto</a> a qualcun altro?
+	{% endif %}
+{% elif players|length == 4 %}
+	Si gioca in quattro: la partita può iniziare.
+{% else %}
+	Si gioca in quattro: ci sono troppo pochi giocatori.
+	{% if not (g.user and g.user['state']['available_to_play']) %}
+		Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
+		(Per farlo devi prima <a href="{{ url_for('auth.register') }}">registrarti</a>.)
+	{% endif %}
+{% endif %}
+</p>
+
+<!-- Game ongoing -->
+{% if players|length == 4 %}
+
+	<!-- Playing order -->
+	<p>
+	Ordine di gioco:
+	{% for player in ordered_players[:-1] %}<strong>{{ player['username'] }}</strong>, {% endfor %}
+	<strong>{{ ordered_players[-1]['username'] }}</strong>.
+	</p>
+
+	<!-- Show antes -->
+	<p>
+	{% for i in range(phase_ante) %}
+		<strong>{{ ordered_players[i]['username'] }}</strong> ha messo il cip: {{ ordered_players[i]['state']['ante'] }}.
+	{% endfor %}
+	<i>[TODO: gestire la fase di cip.]</i>
+	</p>
+
+	<!-- Enter antes -->
+	{% if phase_ante < 4 %}
 		<p>
-		Ciao, purtroppo in questo momento il tavolo è al completo
-		(stanno giocando {% for player in players[:-1] %}{{ player['username'] }}, {% endfor %}{{ players[-1]['username'] }}).
-		</p>
-		<p>Devi aspettare che si liberi un posto per giocare.</p>
-		<p>
-		Nell'attesa, se non l'hai già fatto, puoi iniziare a
-		<a href="{{ url_for('auth.register') }}">registrarti</a>
-		(la registrazione è necessaria per giocare).
-		</p>
-	{% else %}
-		<p>
-		Ciao, non ti conosco. Vuoi <a href="{{ url_for('auth.login') }}">giocare</a>?
-		(Se non l'hai già fatto, devi prima <a href="{{ url_for('auth.register') }}">registrarti</a>.)
+		{% if g.user and ordered_players[phase_ante]['id'] == g.user['id'] %}
+			<form method="post">
+				Metti il cip (valori possibili: 10, 20, ..., 100):
+				<input type="number" name="ante" id="ante" value="10" min="10" max="100" step="10" required>
+				<input type="submit" value="Metti">
+			</form>
+		{% else %}
+			<strong>{{ ordered_players[phase_ante]['username'] }}</strong> deve mettere il cip.
+		{% endif %}
 		</p>
 	{% endif %}
 
-{% endif %}  <!-- if g.user  -->
+	<!-- Show cards before change -->
+	{% if phase_ante == 4 %}
+		<hr>
+		<p>
+		{% for player in ordered_players %}
+			{% if g.user and player['id'] == g.user['id'] %}
+				Carte iniziali:
+				{{ show_cards(player['state']['cards_before_change']) }}.
+			{% endif %}
+		{% endfor %}
+		</p>
+		<hr>
+	{% endif %}
+
+	<!-- Show actions before change -->
+	{% if phase_ante == 4 %}
+		<p>
+		{% for i in range(phase_action_before_change) %}
+			<strong>{{ ordered_players[i]['username'] }}</strong> ha puntato:
+			{{ ordered_players[i]['state']['action_before_change'] }}.
+		{% endfor %}
+		<i>[TODO: gestire la fase di puntate prima del cambio carte.]</i>
+		</p>
+	{% endif %}
+
+	<!-- TODO: manage actions before change -->
+	{% if phase_ante == 4 and phase_action_before_change < 4 %}
+	{% endif %}
+
+	<!-- Show number of changed cards -->
+	{% if phase_ante == 4 and phase_action_before_change == 4 %}
+		<p>
+		{% for i in range(phase_change) %}
+			<strong>{{ ordered_players[i]['username'] }}</strong> ha cambiato:
+			{{ ordered_players[i]['state']['cards_to_be_changed']|length }}.
+		{% endfor %}
+		</p>
+	{% endif %}
+
+	<!-- Change cards -->
+	{% if phase_ante == 4 and phase_action_before_change == 4 and phase_change < 4 %}
+		<p>
+		{% if g.user and ordered_players[phase_change]['id'] == g.user['id'] %}
+			<form method="post">
+				Carte che vuoi cambiare (es. "1, 2, 5"; "0" = servito):
+				<input type="text" name="change" id="change" required>
+				<input type="submit" value="Cambia">
+			</form>
+		{% else %}
+			<strong>{{ ordered_players[phase_change]['username'] }}</strong> deve decidere quante carte cambiare.
+		{% endif %}
+		</p>
+	{% endif %}
+
+	<!-- Show changed and new cards -->
+	{% if phase_ante == 4 and phase_action_before_change == 4 and phase_change == 4 %}
+		<p>
+		{% for player in ordered_players %}
+			{% if g.user and player['id'] == g.user['id'] %}
+				Cambio carte:
+				{{ show_cards(player['state']['cards_to_be_changed']) }}
+				&rarr;
+				{{ show_cards(player['state']['new_cards']) }}.
+			{% endif %}
+		{% endfor %}
+		</p>
+	{% endif %}
+
+	<!-- Show cards after change -->
+	{% if phase_ante == 4 %}
+		<hr>
+		<p>
+		{% for player in ordered_players %}
+			{% if g.user and player['id'] == g.user['id'] %}
+				Carte finali:
+				{{
+					show_cards(merge_cards(
+						player['state']['cards_before_change'],
+						player['state']['cards_to_be_changed'],
+						player['state']['new_cards'],
+					))
+				}}.
+			{% endif %}
+		{% endfor %}
+		</p>
+		<hr>
+	{% endif %}
+
+{% endif %}
+
 {% endblock %}  <!-- block content -->
