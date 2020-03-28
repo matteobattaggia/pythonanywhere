@@ -13,8 +13,7 @@
 <p>
 Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 {% if players|length > 0 %}
-	{{ players|length }} ({% for player in players[:-1] %}<strong>{{ player['username'] }}</strong>, {% endfor %}
-	<strong>{{ players[-1]['username'] }}</strong>).
+	{{ players|length }} ({% for player in players[:-1] %}<strong>{{ player['username'] }}</strong>, {% endfor %}<strong>{{ players[-1]['username'] }}</strong>).
 {% else %}
 	0.
 {% endif %}
