@@ -198,6 +198,17 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		{% for player in ordered_players %}
 			{% if player['state']['fold_after_change'] is none %}
 				{% if g.user and player['id'] == g.user['id'] %}
+					<p>
+						<form method="post">
+							<strong>{{ player['username'] }}</strong>, vuoi mostrare le carte?
+							<input type="radio" name="show_hand" id="yes" value="yes" checked="checked">
+							<label for="yes">sì</label>
+							<input type="radio" name="show_hand" id="no" value="no">
+							<label for="no">no</label>
+							<input type="hidden" id="playing_order" name="playing_order" value="{{ player['state']['playing_order'] }}">
+							<input type="submit" value="Invia">
+						</form>
+					</p>
 				{% else %}
 					<p><strong>{{ player['username'] }}</strong> deve ancora decidere se mostrare le carte.</p>
 				{% endif %}
@@ -216,19 +227,6 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 				</p>
 			{% endif %}
 		{% endfor %}
-		<p>
-		{% if g.user and g.user['state']['fold_after_change'] is none %}
-			<form method="post">
-				Vuoi mostrare le carte:
-				<input type="radio" name="show_hand" id="yes" value="yes" checked="checked">
-				<label for="yes">sì</label>
-				<input type="radio" name="show_hand" id="no" value="no">
-				<label for="no">no</label>
-				<input type="hidden" id="playing_order" name="playing_order" value="{{ g.user['state']['playing_order'] }}">
-				<input type="submit" value="Invia">
-			</form>
-		</p>
-		{% endif %}
 	{% endif %}
 
 	<!-- Hand is finished? -->

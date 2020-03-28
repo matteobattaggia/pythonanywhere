@@ -15,7 +15,6 @@
 <!-- <body style="color: black; background-color: #427e60; font-family: sans-serif"> -->
 <body>
 
-<!-- Navigation bar outside home page -->
 <nav>
 {% if request.path != '/' %}
 <a href="{{ url_for('index') }}">Home</a>
@@ -33,6 +32,14 @@
 {% endfor %}
 {% block content %}{% endblock %}
 </section>
+
+<nav>
+{% if request.path != '/' %}
+<a href="{{ url_for('index') }}">Home</a>
+{% else %}
+<a href="{{ url_for('index') }}">Refresh</a>
+{% endif %}
+</nav>
 
 </body>
 
