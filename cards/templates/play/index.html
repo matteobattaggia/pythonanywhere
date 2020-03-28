@@ -130,9 +130,13 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		{% for player in ordered_players %}
 			{% if g.user and player['id'] == g.user['id'] %}
 				Cambio carte:
-				{{ show_cards(player['state']['cards_to_be_changed']) }}
-				&rarr;
-				{{ show_cards(player['state']['new_cards']) }}.
+				{% if player['state']['cards_to_be_changed']|length > 0 %}
+					{{ show_cards(player['state']['cards_to_be_changed']) }}
+					&rarr;
+					{{ show_cards(player['state']['new_cards']) }}.
+				{% else %}
+					servito.
+				{% endif %}
 			{% endif %}
 		{% endfor %}
 		</p>
@@ -185,8 +189,55 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		</p>
 	{% endif %}
 
+	<!-- TODO: ask whether or not cards shall be shown -->
+	{% if phase_action_after_change == 4 %}
+	{% endif %}
+
 	<!-- TODO: show all cards -->
 	{% if phase_action_after_change == 4 %}
+		{% for player in ordered_players %}
+			{% if player['state']['fold_after_change'] is none %}
+				{% if g.user and player['id'] == g.user['id'] %}
+				{% else %}
+					<p><strong>{{ player['username'] }}</strong> deve ancora decidere se mostrare le carte.</p>
+				{% endif %}
+			{% elif player['state']['fold_after_change'] %}
+				<p><strong>{{ player['username'] }}</strong> non mostra le carte.</p>
+			{% else %}
+				<p>
+					<strong>{{ player['username'] }}</strong> mostra le carte:
+					{{
+						show_cards(merge_cards(
+							player['state']['cards_before_change'],
+							player['state']['cards_to_be_changed'],
+							player['state']['new_cards'],
+						))
+					}}.
+				</p>
+			{% endif %}
+		{% endfor %}
+		<p>
+		{% if g.user and g.user['state']['fold_after_change'] is none %}
+			<form method="post">
+				Vuoi mostrare le carte:
+				<input type="radio" name="show_hand" id="yes" value="yes" checked="checked">
+				<label for="yes">sì</label>
+				<input type="radio" name="show_hand" id="no" value="no">
+				<label for="no">no</label>
+				<input type="hidden" id="playing_order" name="playing_order" value="{{ g.user['state']['playing_order'] }}">
+				<input type="submit" value="Invia">
+			</form>
+		</p>
+		{% endif %}
+	{% endif %}
+
+	<!-- Hand is finished? -->
+	{% if finished %}
+		<p>
+		Mano finita. Gioca un'altra mano con lo
+		<a href="{{ url_for('play.restart') }}">stesso</a> oppure con un
+		<a href="{{ url_for('play.restart', change_playing_order=True) }}">altro</a> ordine di gioco.
+		</p>
 	{% endif %}
 
 {% endif %}

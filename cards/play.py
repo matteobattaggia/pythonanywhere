@@ -104,6 +104,7 @@ def index():
 	players = [user for user in users if (user['state'] and user['state']['available_to_play'])]
 	ordered_players = None
 	phase_ante, phase_action_before_change, phase_change, phase_action_after_change = 0, 0, 0, 0
+	finished = False
 	if len(players) == 4:
 
 		# If not already chosen, choose a random playing order
@@ -221,22 +222,32 @@ def index():
 #				db.commit()
 #				return redirect(url_for('index'))
 
-		# Show the cards and give the winner money
-		# TODO
+		# Show the hands (TODO)
+		if phase_action_after_change == 4:
+			folds_after_change = [player['state']['fold_after_change'] for player in ordered_players]
+			if None in folds_after_change and request.method == 'POST' and 'show_hand' in request.form:
+				i = int(request.form['playing_order'])
+				ordered_players[i]['state']['fold_after_change'] = (request.form['show_hand'] == 'no')
+				db.execute('UPDATE user SET state = ? WHERE id = ?',
+				           (pickle.dumps(ordered_players[i]['state']), ordered_players[i]['id']))
+				db.commit()
+				return redirect(url_for('index'))
+			elif None not in folds_after_change:
+				finished = True
 
 	else:  # if len(players) == 4
 
 		# Reset playing order and hand state for all users
 		for user in users:
-			user['state']['playing_order'       ] =     0
-			user['state']['ante'                ] =     0
-			user['state']['cards_before_change' ] =  None
-			user['state']['action_before_change'] =     0
-			user['state']['fold_before_change'  ] = False
-			user['state']['cards_to_be_changed' ] =  None
-			user['state']['new_cards'           ] =  None
-			user['state']['action_after_change' ] =     0
-			user['state']['fold_after_change'   ] = False
+			user['state']['playing_order'       ] =    0
+			user['state']['ante'                ] =    0
+			user['state']['cards_before_change' ] = None
+			user['state']['action_before_change'] =    0
+			user['state']['fold_before_change'  ] = None
+			user['state']['cards_to_be_changed' ] = None
+			user['state']['new_cards'           ] = None
+			user['state']['action_after_change' ] =    0
+			user['state']['fold_after_change'   ] = None
 			db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(user['state']), user['id']))
 		db.commit()
 
@@ -249,9 +260,31 @@ def index():
 		phase_action_before_change=phase_action_before_change,
 		phase_change=phase_change,
 		phase_action_after_change=phase_action_after_change,
+		finished=finished,
 		show_cards=show_cards,
 		merge_cards=merge_cards,
 	)
+
+@bp.route('/restart/')
+@bp.route('/restart/<change_playing_order>')
+def restart(change_playing_order=None):
+	db = get_db()
+	# Reset hand state (and possibly playing order) for all users
+	users = [deserialize_user_state(user) for user in db.execute('SELECT * FROM user').fetchall()]
+	for user in users:
+		user['state']['ante'                ] =    0
+		user['state']['cards_before_change' ] = None
+		user['state']['action_before_change'] =    0
+		user['state']['fold_before_change'  ] = None
+		user['state']['cards_to_be_changed' ] = None
+		user['state']['new_cards'           ] = None
+		user['state']['action_after_change' ] =    0
+		user['state']['fold_after_change'   ] = None
+		if change_playing_order:
+			user['state']['playing_order'] = 0
+		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(user['state']), user['id']))
+	db.commit()
+	return redirect(url_for('index'))
 
 #-------------------------------------------------------------------------------
 # Debug routes
@@ -268,24 +301,5 @@ def reset(username):
 		# Reset state for username
 		user = db.execute('SELECT * FROM user WHERE username = ?', (username,)).fetchone()
 		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(INITIAL_USER_STATE), user['id']))
-	db.commit()
-	return redirect(url_for('index'))
-
-@bp.route('/debug/restart/')
-@bp.route('/debug/restart/<change_playing_order>')
-def restart(change_playing_order=None):
-	db = get_db()
-	# Reset hand state (and possibly playing order) for all users
-	users = [deserialize_user_state(user) for user in db.execute('SELECT * FROM user').fetchall()]
-	for user in users:
-		user['state']['ante'                ] =    0
-		user['state']['cards_before_change' ] = None
-		user['state']['action_before_change'] =    0
-		user['state']['cards_to_be_changed' ] = None
-		user['state']['new_cards'           ] = None
-		user['state']['action_after_change' ] =    0
-		if change_playing_order:
-			user['state']['playing_order'] = 0
-		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(user['state']), user['id']))
 	db.commit()
 	return redirect(url_for('index'))
