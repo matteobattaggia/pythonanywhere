@@ -120,7 +120,8 @@ def index():
 				player['state']['playing_order'] = playing_order
 				db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(player['state']), player['id']))
 			db.commit()
-		ordered_players = [players[i] for i in playing_orders]
+		ordered_players = sorted(players, key=lambda p: p['state']['playing_order'])
+		assert [p['state']['playing_order'] for p in ordered_players] == list(range(4))
 
 		# Antes
 		# TODO: ante phase temporarily disabled
@@ -273,12 +274,19 @@ def index():
 	)
 
 @bp.route('/restart/')
-@bp.route('/restart/<change_playing_order>')
-def restart(change_playing_order=None):
+@bp.route('/restart/<playing_order>')
+def restart(playing_order=None):
+	if playing_order is not None:
+		if playing_order == 'random':
+			playing_orders = [0, 0, 0, 0]
+		elif set(playing_order) == set('0123'):
+			playing_orders = [int(c) for c in playing_order]
+		else:
+			playing_order = None
 	db = get_db()
 	# Reset hand state (and possibly playing order) for all users
 	users = [deserialize_user_state(user) for user in db.execute('SELECT * FROM user').fetchall()]
-	for user in users:
+	for i, user in enumerate(users):
 		user['state']['ante'                ] =    0
 		user['state']['cards_before_change' ] = None
 		user['state']['action_before_change'] =    0
@@ -287,8 +295,8 @@ def restart(change_playing_order=None):
 		user['state']['new_cards'           ] = None
 		user['state']['action_after_change' ] =    0
 		user['state']['fold_after_change'   ] = None
-		if change_playing_order:
-			user['state']['playing_order'] = 0
+		if playing_order:
+			user['state']['playing_order'] = playing_orders[i]
 		db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(user['state']), user['id']))
 	db.commit()
 	return redirect(url_for('index'))

@@ -234,7 +234,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		<p>
 		Mano finita. Gioca un'altra mano con lo
 		<a href="{{ url_for('play.restart') }}">stesso</a> oppure con un
-		<a href="{{ url_for('play.restart', change_playing_order=True) }}">altro</a> ordine di gioco.
+		<a href="{{ url_for('play.restart', playing_order='random') }}">altro</a> ordine di gioco.
 		</p>
 	{% endif %}
 
