@@ -92,8 +92,13 @@ def load_logged_in_user():
 	if user_id is None:
 		g.user = None
 	else:
-		g.user = deserialize_user_state(get_db().execute(
-			'SELECT * FROM user WHERE id = ?', (user_id,)).fetchone())
+		try:
+			g.user = deserialize_user_state(get_db().execute(
+				'SELECT * FROM user WHERE id = ?', (user_id,)).fetchone())
+		except TypeError:
+			# Current user not found in the database: clear the session
+			g.user = None
+			session.clear()
 
 @bp.route('/', methods=('GET', 'POST'))
 def index():
