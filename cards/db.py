@@ -13,12 +13,14 @@ INITIAL_USER_STATE = \
 	'liabilities'       :     0,
 
 	# These change each hand
-	'ante'                 :    0,
-	'cards_before_change'  : None,
-	'action_before_change' :    0,
-	'cards_to_be_changed'  : None,
-	'new_cards'            : None,
-	'action_after_change'  :    0,
+	'ante'                 :     0,
+	'cards_before_change'  :  None,
+	'action_before_change' :     0,
+	'fold_before_change'   : False,
+	'cards_to_be_changed'  :  None,
+	'new_cards'            :  None,
+	'action_after_change'  :     0,
+	'fold_after_change'    : False,
 }
 
 def deserialize_user_state(user):

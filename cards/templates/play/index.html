@@ -48,14 +48,14 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 	</p>
 
 	<!-- Show antes -->
-	<p>
+	<p style="color: grey">
 	{% for i in range(phase_ante) %}
 		<strong>{{ ordered_players[i]['username'] }}</strong> ha messo il cip: {{ ordered_players[i]['state']['ante'] }}.
 	{% endfor %}
 	<i>[TODO: gestire la fase di cip.]</i>
 	</p>
 
-	<!-- Enter antes -->
+	<!-- Ask antes -->
 	{% if phase_ante < 4 %}
 		<p>
 		{% if g.user and ordered_players[phase_ante]['id'] == g.user['id'] %}
@@ -86,7 +86,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 
 	<!-- Show actions before change -->
 	{% if phase_ante == 4 %}
-		<p>
+		<p style="color: grey">
 		{% for i in range(phase_action_before_change) %}
 			<strong>{{ ordered_players[i]['username'] }}</strong> ha puntato:
 			{{ ordered_players[i]['state']['action_before_change'] }}.
@@ -95,12 +95,12 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		</p>
 	{% endif %}
 
-	<!-- TODO: manage actions before change -->
+	<!-- TODO: ask actions before change -->
 	{% if phase_ante == 4 and phase_action_before_change < 4 %}
 	{% endif %}
 
 	<!-- Show number of changed cards -->
-	{% if phase_ante == 4 and phase_action_before_change == 4 %}
+	{% if phase_action_before_change == 4 %}
 		<p>
 		{% for i in range(phase_change) %}
 			<strong>{{ ordered_players[i]['username'] }}</strong> ha cambiato:
@@ -109,8 +109,8 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		</p>
 	{% endif %}
 
-	<!-- Change cards -->
-	{% if phase_ante == 4 and phase_action_before_change == 4 and phase_change < 4 %}
+	<!-- Ask cards to be changed -->
+	{% if phase_action_before_change == 4 and phase_change < 4 %}
 		<p>
 		{% if g.user and ordered_players[phase_change]['id'] == g.user['id'] %}
 			<form method="post">
@@ -125,7 +125,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 	{% endif %}
 
 	<!-- Show changed and new cards -->
-	{% if phase_ante == 4 and phase_action_before_change == 4 and phase_change == 4 %}
+	{% if phase_change == 4 %}
 		<p>
 		{% for player in ordered_players %}
 			{% if g.user and player['id'] == g.user['id'] %}
@@ -139,7 +139,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 	{% endif %}
 
 	<!-- Show cards after change -->
-	{% if phase_ante == 4 and phase_action_before_change == 4 and phase_change == 4 %}
+	{% if phase_change == 4 %}
 		<p>
 		{% for player in ordered_players %}
 			{% if g.user and player['id'] == g.user['id'] %}
@@ -156,6 +156,37 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 			{% endif %}
 		{% endfor %}
 		</p>
+	{% endif %}
+
+	<!-- Show actions after change -->
+	{% if phase_change == 4 %}
+		<p style="color: grey">
+		{% for i in range(phase_action_after_change) %}
+			<strong>{{ ordered_players[i]['username'] }}</strong> ha puntato:
+			{{ ordered_players[i]['state']['action_after_change'] }}.
+		{% endfor %}
+		<i>[TODO: gestire la fase di puntate dopo il cambio carte.]</i>
+		</p>
+	{% endif %}
+
+	<!-- TODO: ask actions after change -->
+	{% if phase_change == 4 and phase_action_after_change < 4 %}
+		<p>
+		{% if g.user and ordered_players[phase_action_after_change]['id'] == g.user['id'] %}
+			<form method="post">
+				Punta (valori possibili: 10, 20, ..., 200):
+				<input type="number" name="action_after_change" id="action_after_change" value="10" min="10" max="200" step="10" required>
+				<input type="submit" value="Punta">
+				<input type="submit" value="Lascia">
+			</form>
+		{% else %}
+			<strong>{{ ordered_players[phase_ante]['username'] }}</strong> deve puntare.
+		{% endif %}
+		</p>
+	{% endif %}
+
+	<!-- TODO: show all cards -->
+	{% if phase_action_after_change == 4 %}
 	{% endif %}
 
 {% endif %}
