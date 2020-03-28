@@ -197,6 +197,8 @@ def index():
 					random.shuffle(discarded_cards)
 					num_discarded_cards_needed = num_cards_to_be_changed - len(remaining_cards)
 					player['state']['new_cards'] = sorted(remaining_cards + discarded_cards[:num_discarded_cards_needed])
+					remaining_cards = []
+					discarded_cards = discarded_cards[num_discarded_cards_needed:]
 				discarded_cards += player['state']['cards_to_be_changed']
 				db.execute('UPDATE user SET state = ? WHERE id = ?', (pickle.dumps(player['state']), player['id']))
 			db.commit()
