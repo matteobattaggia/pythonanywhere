@@ -48,7 +48,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 	</p>
 
 	<!-- Show antes -->
-	<p style="color: grey">
+	<p class="disabled">
 	{% for i in range(phase_ante) %}
 		<strong>{{ ordered_players[i]['username'] }}</strong> ha messo il cip: {{ ordered_players[i]['state']['ante'] }}.
 	{% endfor %}
@@ -75,10 +75,10 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		<p>
 		{% for player in ordered_players %}
 			{% if g.user and player['id'] == g.user['id'] %}
-				<hr>
+				<hr class="green">
 				Carte iniziali:
 				{{ show_cards(player['state']['cards_before_change']) }}.
-				<hr>
+				<hr class="green">
 			{% endif %}
 		{% endfor %}
 		</p>
@@ -86,7 +86,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 
 	<!-- Show actions before change -->
 	{% if phase_ante == 4 %}
-		<p style="color: grey">
+		<p class="disabled">
 		{% for i in range(phase_action_before_change) %}
 			<strong>{{ ordered_players[i]['username'] }}</strong> ha puntato:
 			{{ ordered_players[i]['state']['action_before_change'] }}.
@@ -147,7 +147,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 		<p>
 		{% for player in ordered_players %}
 			{% if g.user and player['id'] == g.user['id'] %}
-				<hr>
+				<hr class="green">
 				Carte finali:
 				{{
 					show_cards(merge_cards(
@@ -156,7 +156,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 						player['state']['new_cards'],
 					))
 				}}.
-				<hr>
+				<hr class="green">
 			{% endif %}
 		{% endfor %}
 		</p>
@@ -164,7 +164,7 @@ Utenti registrati: {{ users|length }}. Utenti disponibili a giocare:
 
 	<!-- Show actions after change -->
 	{% if phase_change == 4 %}
-		<p style="color: grey">
+		<p class="disabled">
 		{% for i in range(phase_action_after_change) %}
 			<strong>{{ ordered_players[i]['username'] }}</strong> ha puntato:
 			{{ ordered_players[i]['state']['action_after_change'] }}.

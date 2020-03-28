@@ -10,10 +10,31 @@
 <!-- <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"> -->
 <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='w3.css') }}"> -->
 <!-- <script src="script.js"></script> -->
+<style>
+//.main {
+//	color: green;
+//	background-color: black;
+//	font-family: serif;
+//}
+//a {
+//	color: lightgreen;
+//}
+//input[type="text"], input[type="number"], input[type="radio"], input[type="submit"] {
+//	color: lightgreen;
+//	background-color: black;
+//	border-color: lightgreen;
+//}
+.disabled {
+	//color: darkgreen;
+	color: gray;
+}
+//hr.green {
+//	border: 1px solid green;
+//}
+</style>
 </head>
 
-<!-- <body style="color: black; background-color: #427e60; font-family: sans-serif"> -->
-<body>
+<body class="main">
 
 <nav>
 {% if request.path != '/' %}
