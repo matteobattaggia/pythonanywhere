@@ -9,6 +9,24 @@ from cards.db import get_db, INITIAL_USER_STATE, deserialize_user_state
 
 SUITS = SPADE, CLUB, DIAMOND, HEART = list('\u2660\u2663\u2662\u2661')
 RANKS = '2 3 4 5 6 7 8 9 10 J Q K A'.split()
+SUITS_NAMES = ['picche', 'fiori', 'quadri', 'cuori']
+RANKS_NAMES = \
+[
+	( 'due'     , 'due'     , 'al'   , 'ai'   ),
+	( 'tre'     , 'tre'     , 'al'   , 'ai'   ),
+	( 'quattro' , 'quattro' , 'al'   , 'ai'   ),
+	( 'cinque'  , 'cinque'  , 'al'   , 'ai'   ),
+	( 'sei'     , 'sei'     , 'al'   , 'ai'   ),
+	( 'sette'   , 'sette'   , 'al'   , 'ai'   ),
+	( 'otto'    , 'otto'    , "all'" , 'agli' ),
+	( 'nove'    , 'nove'    , 'al'   , 'ai'   ),
+	( 'dieci'   , 'dieci'   , 'al'   , 'ai'   ),
+	( 'fante'   , 'fanti'   , 'al'   , 'ai'   ),
+	( 'donna'   , 'donne'   , 'alla' , 'alle' ),
+	( 're'      , 're'      , 'al'   , 'ai'   ),
+	( 'asso'    , 'assi'    , "all'" , 'agli' ),
+]
+
 def i2card(i, number_of_cards=52):
 	global RANKS, SUITS
 	n = number_of_cards // 4
@@ -19,7 +37,12 @@ def i2card(i, number_of_cards=52):
 NUMBER_OF_CARDS = 32  # 7, 8, 9, 10, J, Q, K, A for four suits
 def show_cards(cs):
 	global NUMBER_OF_CARDS
-	return ', '.join([i2card(c, NUMBER_OF_CARDS)[2] for c in cs])
+	cards_str = ', '.join([i2card(c, NUMBER_OF_CARDS)[2] for c in cs])
+	if len(cs) != 5:
+		return cards_str
+	else:
+		hand_desc = evaluate_hand(cs)
+		return f'{cards_str}: {hand_desc}'
 def get_cards(cs, s):
 	if s.strip() == '0':
 		return []
@@ -36,7 +59,7 @@ def merge_cards(cards_before_change, cards_to_be_changed, new_cards):
 #
 #	n
 #	0 carta piu' alta    high card         (m = rank della carta piu' alta, p = seme della carta piu' alta)
-#	1 coppia             pair              (m = rank della coppia, p = seme piu' alto della coppia)
+#	1 coppia             a pair            (m = rank della coppia, p = seme piu' alto della coppia)
 #	2 doppia coppia      two pairs         (m = rank della coppia piu' alta, p = rank della coppia piu' bassa, q = seme piu' alto della coppia piu' alta)
 #	3 tris               3-of-a-kind       (m = rank del tris)
 #	4 scala semplice     straight          (m = rank carta piu' alta [ATTENZIONE alle scale minime!], p = seme della carta piu' alta)
@@ -45,39 +68,52 @@ def merge_cards(cards_before_change, cards_to_be_changed, new_cards):
 #	7 poker              4-of-a-kind       (m = rank del poker)
 #	8 scala reale        straight flush    (m = seme del scala reale, p = rank della carta piu' alta)
 
-def ranks_and_suits(cs):
-	global NUMBER_OF_CARDS
+def evaluate_hand(cs):
+	global NUMBER_OF_CARDS, SUITS_NAMES, RANKS_NAMES
 	ranks = [i2card(c, NUMBER_OF_CARDS)[0] for c in cs]
 	suits = [i2card(c, NUMBER_OF_CARDS)[1] for c in cs]
-	return ranks, suits
-
-def is_straight(ranks):
-	return set(ranks) == set(range(min(ranks), max(ranks) + 1))
-
-def is_flush(suits):
-	return len(set(suits)) == 1
-
-def is_straight_flush(ranks, suits):
-	return is_straight(ranks) and is_flush(suits)
-
-def is_four_of_a_kind(ranks):
-	sorted_ranks = sorted(ranks)
-	return (sorted_ranks[0] == sorted_ranks[1] == sorted_ranks[2] == sorted_ranks[3]) or \
-	       (sorted_ranks[1] == sorted_ranks[2] == sorted_ranks[3] == sorted_ranks[4])
-
-def is_full_house(ranks):
-	sorted_ranks = sorted(ranks)
-	return (sorted_ranks[0] == sorted_ranks[1] == sorted_ranks[2] and sorted_ranks[3] == sorted_ranks[4]) or \
-	       (sorted_ranks[2] == sorted_ranks[3] == sorted_ranks[4] and sorted_ranks[0] == sorted_ranks[1])
-
-def is_three_of_a_kind(ranks):
-	pass
-
-def is_two_pairs(ranks):
-	pass
-
-def is_pair(ranks):
-	pass
+	is_straight = len(set(ranks)) == 5 and (set(ranks) == set(range(min(ranks), max(ranks) + 1)))
+	is_flush = (len(set(suits)) == 1)
+	ranks_cnt = {r: ranks.count(r) for r in set(ranks)}
+	min_ranks_cnt, max_ranks_cnt = min(ranks_cnt.values()), max(ranks_cnt.values())
+	if is_straight and is_flush:
+		suit, highest_rank, prep = \
+			SUITS_NAMES[suits[0]], RANKS_NAMES[max(ranks)][0], RANKS_NAMES[max(ranks)][2]
+		return f'scala reale di {suit} {prep} {highest_rank}'
+	elif is_flush:
+		suit = SUITS_NAMES[suits[0]]
+		return f'colore di {suit}'
+	elif is_straight:
+		max_rank, max_suit = i2card(max(cs), NUMBER_OF_CARDS)[:2]
+		suit, highest_rank, prep = \
+			SUITS_NAMES[max_suit], RANKS_NAMES[max_rank][0], RANKS_NAMES[max_rank][2]
+		return f'scala {prep} {highest_rank} di {suit}'
+	elif max_ranks_cnt == 4:
+		rank = RANKS_NAMES[[r for r in ranks_cnt if ranks_cnt[r] == 4][0]][1]
+		return f'poker di {rank}'
+	elif max_ranks_cnt == 3:
+		rank3 = RANKS_NAMES[[r for r in ranks_cnt if ranks_cnt[r] == 3][0]][1]
+		if min_ranks_cnt == 2:
+			rank2 = RANKS_NAMES[[r for r in ranks_cnt if ranks_cnt[r] == 2][0]][1]
+			return f'full di {rank3} e {rank2}'
+		else:
+			return f'tris di {rank3}'
+	elif max_ranks_cnt == 2:
+		if len(ranks_cnt) == 3:
+			r1, r2 = sorted([r for r in ranks_cnt if ranks_cnt[r] == 2])
+			rank2_1, rank2_2 = [RANKS_NAMES[r][1] for r in [r1, r2]]
+			suit = SUITS_NAMES[max([s for (r, s) in zip(ranks, suits) if r == r2])]
+			return f'doppia coppia di {rank2_2} e {rank2_1} ({suit})'
+		else:
+			r2 = [r for r in ranks_cnt if ranks_cnt[r] == 2][0]
+			rank2 = RANKS_NAMES[r2][1]
+			suit = SUITS_NAMES[max([s for (r, s) in zip(ranks, suits) if r == r2])]
+			return f'coppia di {rank2} ({suit})'
+	else:
+		max_rank, max_suit = i2card(max(cs), NUMBER_OF_CARDS)[:2]
+		suit, highest_rank = \
+			SUITS_NAMES[max_suit], RANKS_NAMES[max_rank][0]
+		return f'{highest_rank} di {suit}'
 
 #-------------------------------------------------------------------------------
 # Main route
